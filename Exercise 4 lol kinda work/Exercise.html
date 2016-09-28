@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>InfiniteScroll</title>
+    <script src="jquery.min.js"></script>
+    <script src="jquery.scrollLock.js"></script>
+    <script src="angular.js"></script>
+  <script>
+     var mod= angular.module("exampleApp", []);
+     mod.controller("defaultCtrl", function ($scope, $http) {
+        $scope.key="42a69636-1c7e-4c34-b1c6-1345302239ff"; 
+        $scope.id=144020;
+        //$scope.name="arcant";   
+    });
+
+    mod.directive("pop",function($http){
+      return function(scope, element, attrs) {
+        element.on("click",function(){
+          $http.get(" https://lan.api.pvp.net/api/lol/lan/v2.2/match/"+attrs['id']+"?api_key="+scope.key).success(function (data) {
+              var temp=element.clone();
+              var tempObj={};
+              for(var i=0;i<10;i++){
+                if(data.participantIdentities[i].player.summonerId==scope.id){   
+                  tempObj.participant=i;
+               // console.log(newObj.participant);
+                  for(var j=0;j<10;j++){
+               
+                    var player=data.participants[j];
+                //console.log(player.participantId-1+"=="+  newObj.participant);
+                    if(player.participantId-1==tempObj.participant){
+
+                      tempObj.kills=player.stats.kills;
+                      tempObj.assists=player.stats.assists;
+                      tempObj.deaths=player.stats.deaths;
+                      tempObj.win=player.stats.winner;
+                    }
+                  }
+                }
+              }
+              temp.find('img').before(angular.element("<div>"+scope.realName+"</div>"));
+              if(tempObj.win){
+               temp.css("background-color","lightgreen");
+               temp.find('img').before(angular.element("<div style='color:green'>Win</div>")); 
+              }else{
+                temp.css("background-color","lightpink");
+                temp.find('img').before(angular.element("<div style='color:red'>Lose</div>"));  
+              }
+            temp.append(angular.element("<div>Kills:"+tempObj.kills+"</div><div>Deaths:"+tempObj.deaths+"</div><div>Assists:"+tempObj.assists+"</div>"));
+            temp.dialog();
+          });
+        });
+      }
+    });
+   
+    mod.directive("search",function($http,$compile){
+      return function(scope, element, attrs) {
+        $(element[0].lastChild).on("click",search);
+        function search(){
+        $http.get("https://global.api.pvp.net/api/lol/static-data/lan/v1.2/champion?api_key="+scope.key).success(function (data){
+            scope.champs=data;
+            scope.realName=scope.name;
+            $http.get("https://na.api.pvp.net/api/lol/lan/v1.4/summoner/by-name/"+scope.name+"?api_key="+scope.key).success(function (data){
+              scope.id=data[scope.name].id;
+              console.log(scope.id);
+              $http.get("https://lan.api.pvp.net/api/lol/lan/v2.2/matchlist/by-summoner/"+scope.id+"?api_key="+scope.key).success(function (data){
+                  scope.matches=data;
+                  //console.log($scope.matches);
+                  $(document).find("div[scroller]").remove();
+                  element.after($compile("<div scroller></div>")(scope));
+              });
+            });  
+          });
+        }
+      };
+    });
+  
+
+    mod.directive('scroller', function($http,$compile) {
+      return function(scope, element, attrs) {
+        console.log("inside directive");
+        var start=0;
+        var end=20;
+        var list=[];
+      
+        element.append(angular.element("<div  style='height:120px' class='chosenOne'></div>"));
+        element.append(angular.element("<div   class='notChosenOne'></div>"));
+        preAdding(1);
+      //  addElements();
+        $.scrollLock(false);
+        
+        /////////////Scrolling////////////
+       
+        $(window).scroll(function (event) {
+          if($(window).scrollTop()  == $(document).height()-$(window).height()) {
+            $.scrollLock(true);
+            addEarlyDiv();
+            preAdding(1);
+          //  addElements();
+            $.scrollLock(false);
+          }
+          else if(list.length==40&&(start!=30&&end!=40)){
+            if($(window).scrollTop()  <= ($(document).height()-$(window).height())-2400) {
+              $.scrollLock(true);
+              removeLateElements();
+              preAdding(0);
+             // addElementsBegining(); 
+              $.scrollLock(false);
+            }
+          }
+        });
+
+        function removeLateElements(){
+          end-=10;
+          start=end-40;
+          while(list.length>30){
+            element.find(".chosenOne").css("height","-=120");
+            element.find(".notChosenOne").prev().remove();//this is the problem!
+            list.pop();
+          }
+        }
+
+        function addEarlyDiv(){
+          start=end;
+          end+=10;
+          var p=0;
+            while(list.length>30){
+              console.log("removing");
+            element.find(".chosenOne").next().remove();
+            element.find(".chosenOne").css("height","+=120");
+            p++;
+            list.shift();
+          }
+          console.log("dettached:"+p+"listleng="+list.length);       
+        }
+
+        function preAdding(option){//option=1 is going down 0=up
+          for(var a=start;a<end;a++){
+            var name="";
+            for (var prop in scope.champs.data)
+              if(scope.champs.data[prop].id==scope.matches.matches[a].champion){
+                name=scope.champs.data[prop].key+"_Square_0.png";
+              }
+            var obj={
+              img:name,
+              role:scope.matches.matches[a].role,
+              lane:scope.matches.matches[a].lane,
+              match:scope.matches.matches[a].matchId
+            };
+           // console.log(obj.match);
+            list.push(obj);
+            if(option==0&&list.length==40){
+              list.sort(function(a,b){return b.match-a.match});
+              addElementsBegining();
+              break;
+            }
+            if((list.length==20||list.length==30||list.length==40)&& option==1){
+              console.log("caller");
+              list.sort(function(a,b){return b.match-a.match});
+              addElements();
+            }
+          }
+        }
+        function addElementsBegining(){
+          var anchor=element.find(".chosenOne").next();
+          for(var k=0;k<10;k++){
+            anchor.before($compile("<div pop id='"+list[k].match+"' style='background-color:lightgray;width:70%;margin:auto;'><img src='champions/"+list[k].img+"'/>"+list[k].match+"<div style='float:right'>Lane: "+list[k].lane+"<div >Role: "+list[k].role+"</div></div> </div>")(scope));
+            }         
+        }//end fn
+        
+        function addElements(){
+          console.log("length"+list.length);
+          for(var k=list.length-(end-start);k<list.length;k++){
+            element.find(".notChosenOne").before($compile("<div pop id='"+list[k].match+"' style='background-color:lightgray;width:70%;margin:auto;'><img src='champions/"+list[k].img+"'/>"+list[k].match+"<div style='float:right'>Lane: "+list[k].lane+"<div >Role: "+list[k].role+"</div></div> </div>")(scope));
+     
+          }       
+      }//end fn
+
+    };//closing return   
+  });//closing directive
+    
+</script>
+</head>
+<body ng-controller="defaultCtrl ">
+
+  <div search style="height:120px;position:fixed"><input type="text" ng-model='name'></input><button >search</button></div>
+  
+
+</body>
+</html>

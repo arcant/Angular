@@ -1,0 +1,75 @@
+
+
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>Swipe Events</title>
+    <script src="jquery.min.js"></script>
+        
+  <script src="angular.js"></script>
+  <script src="angular-ui-router.min.js"></script>
+
+ <script src="underscore.js"></script>
+
+   
+  <script>
+ 
+    var mod= angular.module("exampleApp", ["ui.router"]);
+   
+  mod.config(function($stateProvider, $urlRouterProvider){
+ 
+    $urlRouterProvider.otherwise('/');
+ 
+    $stateProvider
+      .state('home',{
+        url: '/',
+        views: {
+          'header': {
+            templateUrl: '/partials/header.html'
+          },
+          'content': {
+            templateUrl: '/partials/content.html' 
+          },
+          'footer': {
+            templateUrl: '/partials/footer.html'
+          }
+        }
+      })
+ 
+    .state('dashboard', {
+      url: '/dashboard',
+      views: {
+        'header': {
+          templateUrl: '/partials/header.html'
+        },
+        'content': {
+          templateUrl: '/partials/dashboard.html'
+        }
+      }
+    })
+ 
+    .state('campaigns', {
+      url: '/campaigns',
+      views: {
+        'content': {
+          templateUrl: '/partials/campaigns.html'       
+        },
+        'footer': {
+            templateUrl: '/partials/footer.html'
+        }
+      }
+    })
+  });
+
+   
+  </script>
+</head>
+<body >
+  
+      <div ui-view="header"></div>
+       <div ui-view="content"></div>
+       <div ui-view="footer"></div>
+ 
+
+</body>
+</html>

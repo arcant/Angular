@@ -1,0 +1,175 @@
+<!-- TODO
+make sure the order!!
+upside
+extra info win or loose
+maybe some stadistics
+up scrolling
+(have a variable that allows not scrolling until the stuff is loaded else there will be problems)
+-->
+
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>Swipe Events</title>
+    <script data-jsfiddle="common" src="jquery.min.js"></script>
+    <script data-jsfiddle="common" src="jquery.scrollLock.js"></script>
+    
+  <script src="angular.js"></script>
+<style>
+    form .invalid.dirty { background-color: lightpink; }
+    form .valid.dirty { background-color: lightgreen; }
+   
+</style>
+
+   
+  <script>
+ 
+    var mod= angular.module("exampleApp", []);
+    mod.controller("defaultCtrl", function ($scope, $http) {
+        $scope.id=144020;
+        $scope.name="arcant";
+
+      });
+
+    mod.directive('scroller', function($http) {
+     
+      return function(scope, element, attrs) {
+        $.scrollLock();
+        var start=0;
+        var end=5;
+        var key="42a69636-1c7e-4c34-b1c6-1345302239ff"; 
+        var list=[];
+        var champs={};
+        var counter=0;
+        $http.get("https://global.api.pvp.net/api/lol/static-data/lan/v1.2/champion?api_key="+key).success(function (data){
+          champs=data;
+           addElements();
+        });
+        element.append(angular.element("<div  style='height:120px' class='chosenOne'></div>"));
+       
+        $(window).scroll(function (event) {
+            if($(window).scrollTop() + $(window).height() == $(document).height()) {
+              $.scrollLock();
+              addEarlyDiv();
+              addElements();
+              
+             $(window).scrollTop($(document).height());
+            //  element.find(":first-child").prepend(angular.element("<div style='height:600px'></div>"));
+       // getData();
+            }
+            
+        });
+        function addEarlyDiv(){
+          start=end;
+          end+=5;
+          for(var a=0;a<=5;a++){
+             if(list.length>20){
+            element.find(".chosenOne").next().remove();
+            element.find(".chosenOne").css("height","+=120");
+
+            
+              list.shift();
+            }
+          }
+        
+        }
+        function addElements(){
+       
+        
+        /////////////////////////////////////Get matchIDS///////////////////
+        counter++;
+        
+        
+       
+        $http.get("https://lan.api.pvp.net/api/lol/lan/v2.2/matchlist/by-summoner/144020?api_key="+key).success(function (data){
+          for(var a=start;a<end;a++){
+             var obj={
+                 
+                  role:data.matches[a].role,
+                  lane:data.matches[a].lane,
+                  match:data.matches[a].matchId
+                };
+            (function () {
+              var index=a;
+              var newObj=obj;
+              newObj.index=a;
+              ////////////////////////////////Get champion selected/////////////////
+              // data.matches[index].champion
+              var name;
+               
+               for(prop in champs.data){
+               
+                if(champs.data[prop].id==data.matches[index].champion){
+                  name=prop+".png";
+                }
+               }
+                name= name.replace(".png","_square_0.png");
+                newObj.img=name;
+                //console.log(index);
+                /////////////////////////////Get matchs Data//////////////////////
+                counter++;
+                 $http.get(" https://lan.api.pvp.net/api/lol/lan/v2.2/match/"+newObj.match+"?api_key="+key).success(function (data) {
+                      for(var i=0;i<10;i++){
+                       // console.log(scope.id+"=="+data.participantIdentities[i].player.summonerId);
+                        if(data.participantIdentities[i].player.summonerId==scope.id){
+                        
+                          newObj.participant=i;
+                         // console.log(newObj.participant);
+                          for(var j=0;j<10;j++){
+                         
+                          var player=data.participants[j];
+                          //console.log(player.participantId-1+"=="+  newObj.participant);
+                          if(player.participantId-1==newObj.participant){
+
+                            newObj.kills=player.stats.kills;
+                            newObj.assists=player.stats.assists;
+                            newObj.deaths=player.stats.deaths;
+                            newObj.win=player.stats.winner;
+                          //  console.log(list);
+                            list.push(newObj);
+                           // console.log(newObj);
+                            if(list.length==5||list.length==10||list.length==15||list.length==20||list.length>=25){
+                              console.log(list);
+                              list.sort(function(a,b){return a.index-b.index});
+                          
+                              for(var k=list.length-(end-start);k<list.length;k++){
+                                var color="lightblue";
+                                if(!list[k].win)
+                                  color="lightpink";
+                                element.append(angular.element("<div  style='background-color:"+color+";width:70%;margin:auto;'><img src='champions/"+list[k].img+"'/>"+list[k].match+"Index:"+list[k].index+"<div style='float:right'><table><th>Kills</th><th>Deaths</th><th>Assists</th><tr><td>"+list[k].kills+"</td><td>"+list[k].deaths+"</td><td>"+list[k].assists+"</td></tr></table></div></div>"));
+                                  $.scrollLock();
+                              }
+                            }
+                          break;
+                          }
+                        }
+                        }
+                        
+                      }
+                     
+                 });
+               
+  
+            }());
+          }
+        });
+        
+      }
+  //https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/RiotSchmick?api_key=318f779d-708c-413d-a338-f1a40d62909a
+  //https://na.api.pvp.net/api/lol/lan/v1.4/summoner/by-name/arcant?api_key=318f779d-708c-413d-a338-f1a40d62909a    my sumooner :D
+    ////api/lol/{region}/v1.3/game/by-summoner/{summonerId}/recent     //past 10 games
+    ///api/lol/static-data/{region}/v1.2/champion/{id}                 // get champs 224316794
+      };  
+    });
+    
+
+     
+  
+  </script>
+</head>
+<body ng-controller="defaultCtrl ">
+ <div scroller>
+ </div>
+
+</body>
+</html>

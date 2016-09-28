@@ -1,0 +1,78 @@
+
+
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>Swipe Events</title>
+    <script  src="jquery.min.js"></script>
+        
+    <script src="angular.js"></script>
+    <script src="angular-ui-router.min.js"></script>
+
+    <script src="underscore.js"></script>
+
+   
+  <script>
+ 
+    var mod= angular.module("exampleApp", ["ui.router"]);
+    mod.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+      $urlRouterProvider.otherwise('/shows');
+   
+      $stateProvider.state('shows', {
+              url:'/shows',
+              templateUrl: 'templates/shows.html',
+              controller: 'ShowsController'
+      });
+      $stateProvider.state('shows.detail', {
+              url: '/detail/:id',
+              templateUrl: 'templates/shows-detail.html',
+              controller: 'ShowsDetailController'
+      });
+    }]);
+    mod.factory('ShowsService',function(){
+    var shows = [{
+        id: 1,
+        name: 'dinosaur',
+        description: 'Groaaar'
+    },
+    {
+        id: 2,
+        name: 'dolphin',
+        description: 'wuiijijiji'   
+    },
+    {
+        id: 3,
+        name: 'Bear', 
+        description: 'Muuuu'
+    }];
+ 
+ 
+    return {
+        list: function(){
+            return shows;
+        },
+        find: function(id){
+            return _.find(shows, function(show){return show.id == id});
+        }
+    }
+ });
+    mod.controller('ShowsController',  function($scope, ShowsService) {
+    $scope.shows = ShowsService.list();
+ });
+    mod.controller('ShowsDetailController', function($scope, $stateParams, ShowsService) {
+        $scope.selectedShow = ShowsService.find($stateParams.id);
+ });
+    mod.controller("defaultCtrl", function ($scope) {        
+      
+    });
+
+   
+  </script>
+</head>
+<body >
+   <!-- Angular UI Router Directive for template insertion -->
+        <div  ui-view></div>
+ 
+
+</body>
+</html>

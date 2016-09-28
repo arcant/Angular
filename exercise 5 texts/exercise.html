@@ -1,0 +1,54 @@
+
+
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>Texts</title>
+  <script  src="jquery.min.js"></script>
+  <script src="angular.js"></script>
+  <script>
+ 
+    var mod= angular.module("exampleApp", []);
+    mod.controller("defaultCtrl", function ($scope) {        
+      
+    });
+
+    mod.directive("secret",function(){
+
+      return {
+        link: function (scope, element, attrs) {
+          console.log("cui");
+          var temp="";
+          for(var i=0;i<attrs["size"];i++)
+            temp+="*";
+          element.append(temp);
+        },
+        restrict:"E"
+      }//end return obj
+    });//end directive
+   
+    mod.directive("high",function(){
+
+      return {
+        link: function (scope, element, attrs) {
+          console.log("cui");
+          var temp=attrs["word"];
+         
+          element.css("background-color","black")   
+          element.append(temp);
+          
+         },
+        restrict:"E"
+      }//end return obj
+    });//end directive
+  
+  </script>
+</head>
+<body ng-controller="defaultCtrl ">
+<div>
+  You cant see me }:V <secret size="8"><secret></div>
+<div>
+  You can see me {:C <high word="ponchotogemon"></hight></div>
+
+</body>
+</html>

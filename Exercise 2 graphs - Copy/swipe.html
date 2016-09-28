@@ -1,0 +1,163 @@
+<!-- TODO
+upgrade model when added a row or column 
+ctrl z!! is a mess
+crtl v same
+deleting with key also
+-->
+
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>Swipe Events</title>
+  <script src="angular.js"></script>
+  <!-- Charts--> 
+  <!--Load the AJAX API-->
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+      <!-- RULEJS-->
+    <script  src="lib/RuleJS/lib/lodash/lodash.js"></script>
+    <script  src="lib/RuleJS/lib/underscore.string/underscore.string.js"></script>
+    
+    <script  src="lib/RuleJS/lib/numericjs/numeric.js"></script>
+    <script  src="lib/RuleJS/lib/js-md5/md5.js"></script>
+    <script  src="lib/RuleJS/lib/jstat/jstat.js"></script>
+    <script  src="lib/RuleJS/lib/formulajs/formula.js"></script>
+
+    <script  src="lib/RuleJS/js/parser.js"></script>
+    <script  src="lib/RuleJS/js/ruleJS.js"></script>
+    <!--
+     Loading Handsontable 
+    -->  
+
+    <link  rel="stylesheet" media="screen" href="dist/pikaday/pikaday.css">
+    <script  src="dist/pikaday/pikaday.js"></script>
+    <script data-jsfiddle="common" src="dist/moment/moment.js"></script>
+    <script  src="dist/zeroclipboard/ZeroClipboard.js"></script>
+    <script  src="jquery.min.js"></script>
+    <link  rel="stylesheet" media="screen" href="dist/handsontable.css">
+    <script  src="dist/handsontable.js"></script>
+    <link  rel="stylesheet" media="screen" href="plugins/bootstrap/handsontable.bootstrap.css">
+    <link rel="stylesheet" media="screen" href="lib/handsontable.formula.css">
+    <script  src="lib/handsontable.formula.js"></script>
+
+
+   
+  <script>
+  google.load('visualization', '1', {'packages':['corechart']});
+    var mod= angular.module("exampleApp", []);
+    mod.controller("defaultCtrl", function ($scope, $element) {
+          $scope.data= [
+                  ["Tacos" , "week1", "week2", "week3"],
+                  ["trompo",    2   ,    2   ,    3   ],
+                  ["asada" ,    4   ,    4   ,    1   ],
+                  ["birria",    6   ,    4   ,    8   ],
+                  ["pirata",    0   ,    1   ,    3   ]
+                ];
+ 
+         
+      });
+    mod.directive('spread', function() {
+      return {
+        restrict: 'A',
+        scope:{newData:"=ngModel"},
+        require: "ngModel",
+        link: function(scope, element, attrs,ctrl) {
+          element.on("change", function (event) {
+            scope.$apply();
+          });
+          scope.$watch( function() { return scope.newData; }, function (newValue, oldValue) {
+          console.log("joab"); 
+          console.log(scope.newData[0][0]);
+          hot.render();
+        },true);
+
+//console.log(document.getElementById(attrs["id"]));
+          var cols=[];
+          cols.push({});
+          for(var i=1;i<scope.newData[0].length;i++){
+            var a={type:'numeric'};
+            cols.push(a);
+          }
+
+          /*var headers=[]; //for some headers if wanted
+           for(var i=0;i<scope.newData[0].length;i++){
+            headers.push(scope.newData[0][i]);
+          }*/
+  
+          var hot = new Handsontable(element[0],{
+            data:scope.newData,
+            colHeaders: false,
+            rowHeaders: false,
+            mergeCells:true,
+            formulas:true,
+            columns:cols,//[{},{type:'numeric'},{type:'numeric'},{type:'numeric'}],
+            contextMenu: true
+           
+          });
+       }
+      };
+    });
+    
+
+      // CHARTS
+      mod.directive("chart",function(){
+        
+         return {
+          restrict: 'A',
+          scope:{newData:"=ngModel",type:"@type"},
+          
+         
+   // ... draw the chart...
+          link: function(scope,element,attrs){
+
+            google.setOnLoadCallback(drawChart);
+            $(window).resize(function(){
+               drawChart();
+            });
+            function drawChart() {
+             
+              // Create the data table.
+           
+              var data=google.visualization.arrayToDataTable(scope.newData,false);
+            
+              // Set chart options
+              var options = {'title':'ñam ñam ñam',
+                              is3D:true,
+                             'width':window.innerWidth/2,
+                             'height':window.innerHeight/3};
+
+              // Instantiate and draw our chart, passing in some options.
+              var chart = new google.visualization[scope.type](element[0]);
+              chart.draw(data, options);
+
+
+               element.append(angular.element("<input type='button' value='PieChart'> </input>"));
+               element.append(angular.element("<input type='button' value='BarChart'> </input>"));
+               element.append(angular.element("<input type='button' value='LineChart'> </input>"));
+               element.find("input").on("click",function(event){
+                scope.type=event.target.value;
+                drawChart();
+               });
+            }
+             scope.$watch( function() { return scope.newData; }, function (newValue, oldValue) {
+                drawChart();
+              },true);
+          }
+        }
+      });
+// Load the Visualization API library and the piechart library.
+ 
+  
+  </script>
+</head>
+<body ng-controller="defaultCtrl ">
+        
+    <!-- part for new directive-->
+    <div id="example1"  spread cols="3" rows="2" ng-model="data" >
+
+    </div>
+
+    <p>{{data}}</p>
+
+    <div id="chart_div" chart ng-model="data" type="LineChart"></div>
+</body>
+</html>

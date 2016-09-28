@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>spreadsheets</title>
+  <script src="angular.js"></script>
+   
+    <!-- RULEJS-->
+    <script  src="lib/RuleJS/lib/lodash/lodash.js"></script>
+    <script  src="lib/RuleJS/lib/underscore.string/underscore.string.js"></script>
+    
+    <script  src="lib/RuleJS/lib/numericjs/numeric.js"></script>
+    <script  src="lib/RuleJS/lib/js-md5/md5.js"></script>
+    <script  src="lib/RuleJS/lib/jstat/jstat.js"></script>
+    <script  src="lib/RuleJS/lib/formulajs/formula.js"></script>
+
+    <script  src="lib/RuleJS/js/parser.js"></script>
+    <script  src="lib/RuleJS/js/ruleJS.js"></script>
+    <!--
+     Loading Handsontable 
+    -->  
+
+    <link  rel="stylesheet" media="screen" href="dist/pikaday/pikaday.css">
+    <script  src="dist/pikaday/pikaday.js"></script>
+    <script data-jsfiddle="common" src="dist/moment/moment.js"></script>
+    <script  src="dist/zeroclipboard/ZeroClipboard.js"></script>
+    <script  src="jquery.min.js"></script>
+    <link  rel="stylesheet" media="screen" href="dist/handsontable.css">
+    <script  src="dist/handsontable.js"></script>
+    <link  rel="stylesheet" media="screen" href="plugins/bootstrap/handsontable.bootstrap.css">
+    <link rel="stylesheet" media="screen" href="lib/handsontable.formula.css">
+    <script  src="lib/handsontable.formula.js"></script>
+
+
+   
+    <script>
+        angular.module("exampleApp", [])
+        .controller("defaultCtrl", function ($scope, $element) {
+          $scope.data= [
+                  [1, 2, 3, 4, 5, 6],
+                  [1, 2, 3, 4, 5, 6],
+                  [1, 2, 3, 4, 5, 6],
+                  [1, 2, 3, 4, 5, 6],
+                  [1, 2, 3, 4, 5, 6],
+                  [1, 2, 3, 4, 5, 6],
+                  [1, 2, 3, 4, 5, 6],
+                  [1, 2, 3, 4, 5, 6]
+                ];
+         $scope.change=function(){
+              $scope.data[2][0]=Math.random();
+          }           
+        })
+        .directive('spread', function() {
+          return {
+            restrict: 'A',
+            scope:{data:"=prop"},
+            require: "ngModel",
+            link: function(scope, element, attrs,ctrl) {
+              element.on("change", function (event) {
+                scope.$apply();
+              });
+              scope.$watch( function() { return scope.data; }, function (newValue, oldValue) {
+                console.log("joab");
+                console.log(scope.data[0][0]);
+                hot.render();
+              },true);
+
+              var hot = new Handsontable(element[0],{
+                data: scope.data,
+                colHeaders: true,
+                rowHeaders: true,
+                minCols: 8,
+                minRows: 10,
+                mergeCells:true,
+                formulas:true,
+                contextMenu: true
+              });
+            }
+          };
+        })
+    </script>
+</head>
+<body ng-controller="defaultCtrl ">  
+    <div id="example1" ng-model="data" prop="data" spread cols="3" rows="2" >
+    </div>
+    <input type="button" ng-click="change()">this is for testing :G</input>
+    <p>{{data}}</p>
+</body>
+</html>

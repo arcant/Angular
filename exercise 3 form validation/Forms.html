@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>Form Validation</title>
+  <script src="jquery.min.js"></script>
+  <script src="angular.js"></script>
+<style>
+  form .invalid.dirty { background-color: lightpink; }
+  form .valid.dirty { background-color: lightgreen; }
+</style>
+<script>
+  var mod= angular.module("exampleApp", []);
+  mod.controller("defaultCtrl", function ($scope) {  });
+
+  mod.directive('validation', function() {
+    return function(scope, element, attrs) {
+      var errorMsg="";
+      errorMsg=attrs["errormsg"];
+      
+      function affirmative(elements){
+        elements.addClass("valid");
+        elements.removeClass("invalid");
+        if((elements[0].nextSibling.className=="spoink")){
+          $(elements[0].nextSibling).remove();
+        }
+      }
+      function negative(elements,text){
+        elements.addClass("invalid");
+        elements.removeClass("valid");
+        console.log(elements[0].nextSibling.className);
+        if(errorMsg!=""||errorMsg!="undefined")
+          text=errorMsg;
+        if(!(elements[0].nextSibling.className=="spoink")){
+          elements.after(angular.element("<span class='spoink' style='background-color:red'>"+text+" </span>"));
+        }
+      }
+        /////similar////
+      if(attrs["validation"]=="coincide"){ 
+        var inputs=element.parent().find("input[name="+attrs["name"]+"]"); 
+        inputs.on("change",function(event){
+          $(event.target).addClass("dirty");
+          var text=inputs[0].value;
+          var isGood=true;
+          for(var i=0;i<inputs.length;i++){
+            if(inputs[i].value!=text){
+              isGood=false;
+            }
+          }
+          for(var i=0;i<inputs.length;i++){
+            if(isGood){
+              affirmative($(inputs[i]));
+            }else{
+              if(inputs[i].classList.contains("dirty"))
+              negative($(inputs[i]),"texts do not coincide! :u");
+            }
+          }
+        });
+      }
+      /////Number and Numeric Range////////
+      if(attrs["validation"]=="number"||attrs["validation"]=="numericRange"){ 
+        element.on("change",function(event){
+          element.addClass("dirty");
+          if(isNaN(element[0].value)||element[0].value==""){
+            negative(element,"that is not a number! :u");
+            return;
+          }else{
+            affirmative(element);
+          }
+          if(attrs["validation"]=="numericRange"){
+            if(element[0].value>Number(attrs["max"])||element[0].value<Number(attrs["min"])){
+              negative(element,"Not within range :U");
+            }else{
+              affirmative(element);
+            }
+          }
+        });
+      }
+      ///////alphabetic///////
+      if(attrs["validation"]=="alpha"){
+        element.on("change",function(event){
+          element.addClass("dirty");
+          var reg=new RegExp("[a-z]{"+element[0].value.length+"}",'i');
+          if(!reg.test(element[0].value)||element[0].value==""){
+            negative(element,"not a letter :u");
+          }else{
+            affirmative(element);
+          }
+        });
+      } 
+      /////Date Range/////////
+      if(attrs["validation"]=="dateRange"){
+        element.on("change",function(event){
+          element.addClass("dirty");
+          console.log(element[0].value);
+          var datePicked=new Date(element[0].value);
+          datePicked.setDate(datePicked.getDate()+1);//needs plus one or its going to be one day before
+          var dateToday=new Date();
+          console.log(datePicked);
+          var dateLate=new Date(dateToday.getFullYear(),dateToday.getMonth(),dateToday.getDate()+Number(attrs["max"])+1);
+          var dateEarly=new Date(dateToday.getFullYear(),dateToday.getMonth(),dateToday.getDate()-Number(attrs["min"]));
+          if(datePicked<dateEarly||datePicked>dateLate){ 
+            negative(element,"Invalid Date");
+          }else{
+            affirmative(element);
+          }
+          if(datePicked=="Invalid Date"){
+            negative(element,"Not a date :U");
+          }
+          
+        });
+      }
+    };  
+  });
+    
+
+     
+  
+  </script>
+</head>
+<body ng-controller="defaultCtrl ">
+  <form  >
+    <span>coincide</span>  
+    <input type='text' validation="coincide" name="duck" errorMsg="oink"></input>
+    <input type='text'  name="duck" ></input>
+    <input type='text'  name="duck"></input>
+    <div>
+      numbers<input type='text' validation='number'errorMsg="oink"></input>
+      alphas<input type='text' validation='alpha'errorMsg="oink"></input>
+      numRange<input type='text' validation='numericRange' min="5" max="10" errorMsg="oink"></input>
+      dateRange<input type='date' validation='dateRange' min="5" max="10" errorMsg="oink"></input>
+    </div>
+  </form>      
+  
+</body>
+</html>

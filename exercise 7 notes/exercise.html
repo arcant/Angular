@@ -1,0 +1,104 @@
+
+
+<!DOCTYPE html>
+<html ng-app="exampleApp">
+<head>
+  <title>Swipe Events</title>
+    <script data-jsfiddle="common" src="jquery.min.js"></script>
+        
+  <script src="angular.js"></script>
+  <link href="jquery-ui.min.css" rel="stylesheet">
+  <script src="underscore.js"></script>
+  <script type="text/javascript"  src="jquery-ui.min.js"></script>
+ <style>
+.note{width:200px;height:200px;background-color:yellow;margin-left:1%;margin-top:1%;display:inline-block;}
+textarea{background-color:yellow;display:block;height:85%;width:90%;margin:auto;padding:auto;border: none;overflow:hidden}
+label{font-size:10px;font-weight:bold;}
+.modified{position:relative;left:80%;}
+
+</style>
+  <script>
+ 
+    var mod= angular.module("exampleApp", []);
+    
+    mod.controller("mainCtrl",function($scope,$compile){
+    var count=0;
+    var noteInner;
+    for(var key in localStorage){
+      //console.log(localStorage.getItem(key));
+      $scope.note=jQuery.parseJSON(localStorage.getItem(key));
+      //console.log($scope.note);
+      $scope.date=key;
+      $("body").last().append($compile("<note obj='note' date='"+$scope.date+"'></note>")($scope));
+      count++;
+    }
+    $scope.addNote=function(){
+      $("body").last().append($compile("<note></note>")($scope));
+    }   
+  });
+    mod.directive("note",function(){
+      return {
+        link:function(scope, element, attrs){
+          var count=0;
+          var noteInner;
+          var date=new Date();
+          
+          var labelText=date.getDate()+"/"+date.getMonth()+"/"+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes();
+          var note=angular.element("<div class='note'></div>");
+          var textField=angular.element("<textarea rows='10'></textarea>");
+          var label=angular.element("<label>"+labelText+"</label>");
+          var label2=angular.element("<label>"+labelText+"</label>");
+          var deleteButton=angular.element("<input type='button' value='delete'></input>");
+          deleteButton.on("click", deleteNote);
+          textField.on("keyup", modify);
+          note.append(label);
+          note.append(deleteButton);
+          note.append(label2);
+          note.append(textField);
+          element.append(note);
+          if(attrs["obj"]){
+            console.log(scope.date);
+            label.text(scope.note.created);
+            label2.text(scope.note.modified);
+            textField.val(scope.note.textarea);
+          }else{
+            scope.date=date;
+            save();
+          }
+          
+          function deleteNote(){
+            element.remove();
+            delete localStorage[scope.date];
+          }
+          function modify(){
+            var date=new Date();
+            console.log("modifying");
+            console.log(scope.date);
+            element.find('input').next().text(date.getDate()+"/"+date.getMonth()+"/"+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes());
+            save();
+          }
+          function save(a){
+            var obj={};
+            obj.textarea=element.find("textarea").val();
+            obj.created=element.find("input").prev().text();
+            obj.modified=element.find("input").next().text();
+            console.log("saving");
+            console.log(obj);
+            console.log(JSON.stringify(obj));
+            console.log(scope.date);
+            localStorage[scope.date]= JSON.stringify(obj);
+          }
+        },
+        restrict:"E",
+        scope:{note:"=obj",date:"@date"}
+      };
+    });
+   
+  </script>
+</head>
+<body ng-controller="mainCtrl">
+
+    <button id="button" style="margin:auto;padding:auto;display:block;"  ng-click="addNote()">Add Note</button>
+   
+</body>
+</html>
